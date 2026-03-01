@@ -1,488 +1,131 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Premiado!</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        /* --- ESTILOS GERAIS --- */
-        :root {
-            --primary-blue: #00c3ff;
-            --wrong-red: #ff3f34;
-            --correct-green: #2ed573;
-            --active-yellow: #ffd700;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jaqueline...</title>
 
-        body {
-            font-family: 'Fredoka', sans-serif;
-            background-color: var(--primary-blue);
-            background-image: radial-gradient(#2ad0ff 15%, transparent 16%), radial-gradient(#2ad0ff 15%, transparent 16%);
-            background-size: 60px 60px;
-            background-position: 0 0, 30px 30px;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: white;
-            text-align: center;
-            overflow: hidden;
-            user-select: none;
-        }
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: #121212;
+        color: #e4e4e4;
+    }
 
-        .container {
-            width: 90%;
-            max-width: 700px;
-            padding: 20px;
-            position: relative;
-            z-index: 10;
-        }
+    .container {
+        max-width: 900px;
+        margin: 60px auto;
+        padding: 0 20px;
+        text-align: center;
+    }
 
-        /* Telas */
-        .screen { display: none; animation: fadeIn 0.5s; }
-        .screen.active { display: block; }
+    h1 {
+        font-size: 42px;
+        font-weight: 600;
+        margin-bottom: 40px;
+        color: #ffffff;
+    }
 
-        /* --- TIMER --- */
-        .timer-container {
-            position: absolute; top: -60px; right: 0;
-            font-size: 2.5rem; font-weight: bold; text-shadow: 3px 3px 0 #000;
-            background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 10px;
-            display: none;
-        }
+    .box {
+        background-color: #1e1e1e;
+        border: 1px solid #2c2c2c;
+        border-radius: 8px;
+        padding: 40px;
+        font-size: 18px;
+        line-height: 1.9;
+        color: #dcdcdc;
+        text-align: left;
+    }
 
-        /* --- BARRA DE PROGRESSO --- */
-        .progress-wrapper {
-            position: relative; margin-top: 30px; display: flex;
-            justify-content: space-between; align-items: center; width: 100%;
-        }
-        .progress-line {
-            position: absolute; top: 50%; left: 0; width: 100%; height: 4px;
-            background: black; z-index: 0; transform: translateY(-50%);
-        }
-        .step-circle {
-            width: 40px; height: 40px; background: white; border: 3px solid black;
-            border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            color: black; font-weight: bold; font-size: 1.2rem; z-index: 1; position: relative;
-        }
-        .step-circle.active {
-            background-color: var(--active-yellow); transform: scale(1.2);
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-        }
+    .box p {
+        margin-bottom: 25px;
+    }
 
-        /* --- TEXTOS E BOTÕES --- */
-        h1 { font-size: 3rem; text-shadow: 4px 4px 0px #000; margin-bottom: 10px; }
-        h2 { font-size: 1.5rem; margin-bottom: 30px; text-shadow: 2px 2px 0px #000; }
-
-        .btn {
-            background: white; color: black; border: 3px solid black; border-radius: 15px;
-            padding: 15px; font-size: 1.2rem; font-family: 'Fredoka', sans-serif; font-weight: bold;
-            cursor: pointer; box-shadow: 5px 5px 0px #000; width: 100%; margin-bottom: 15px; transition: 0.1s;
-        }
-        .btn:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; }
-        .btn:hover { background-color: #f0f0f0; }
-        .btn.correct { background-color: var(--correct-green); color: white; }
-        .btn.wrong { background-color: var(--wrong-red); color: white; }
-
-        /* --- TELA DE TEMPO ACABOU --- */
-        #timeout-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #ff3f34;
-            background-image: repeating-conic-gradient(#ff5e57 0% 10%, #ff3f34 10% 20%);
-            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
-        }
-        #timeout-screen h1 { margin-bottom: 50px; }
-
-        /* --- ÁREA DO PRÊMIO (NOVO ESTILO) --- */
-        .prize-box {
-            background: rgba(0,0,0,0.5); border-radius: 15px; padding: 20px;
-            margin-top: 20px; border: 2px solid white;
-        }
-        
-        .key-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #222;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            gap: 10px;
-        }
-
-        .code-mask {
-            font-family: monospace;
-            font-size: 1.5rem;
-            color: #0f0;
-            letter-spacing: 2px;
-            flex-grow: 1; /* Ocupa o espaço disponível */
-        }
-
-        .copy-btn {
-            background: white;
-            color: black;
-            border: 2px solid black;
-            border-radius: 8px;
-            padding: 8px 15px;
-            font-family: 'Fredoka', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 3px 3px 0px #000;
-            transition: 0.1s;
-        }
-
-        .copy-btn:active {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0px #000;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+    .final {
+        text-align: center;
+        font-size: 22px;
+        margin-top: 40px;
+        font-weight: 500;
+        color: #ffffff;
+    }
+</style>
 </head>
+
 <body>
 
-    <div class="container">
-        
-        <div id="game-timer" class="timer-container">00:30</div>
+<div class="container">
 
-        <div id="start-screen" class="screen active">
-            <h1>🤩 QUIZ PREMIADO</h1>
-            <h2>Se errar, vai ser bloqueada de tudo!</h2>
-            <button class="btn" onclick="startGame()">COMEÇAR DESAFIO</button>
-        </div>
+    <h1>Jaqueline...</h1>
 
-        <div id="quiz-screen" class="screen">
-            <h2 id="question-text">Pergunta...</h2>
-            <div id="answer-buttons"></div>
-            
-            <div class="progress-wrapper">
-                <div class="progress-line"></div>
-                <div id="steps-container" style="display: flex; justify-content: space-between; width: 100%;"></div>
-            </div>
-        </div>
+    <div class="box">
 
-        <div id="result-screen" class="screen">
-            <h1>AEEE! ACERTOU!</h1>
-            <h2>Aproveita uma das suas bandas preferidas e seu presente:</h2>
-            <div class="prize-box">
-                <p>🔑 PRESENTE 1 - ATIVAR NA STEAM:</p>
-                <div class="key-container">
-                    <span class="code-mask">*****-*****-*****</span>
-                    <button class="copy-btn" onclick="copyToClipboard('VOU-MANDAR-NO-DISCORD', this)">COPIAR</button>
-                </div>
+        <p>Vou começar o texto igual conto de fadas… Querida, Yuno. Brincadeira! Oi, meu bem! É a primeira vez que faço esse negócio de texto pra alguém até porque é um negócio muito complicado falar alguma coisa desse nível pra uma pessoa. Você não sabe a reação e não sabe o que vai acontecer. Além de que eu sou muito desconfiado.</p>
 
-                <p>🔑 PRESENTE 2 - ATIVAR NA STEAM:</p>
-                <div class="key-container">
-                    <span class="code-mask">*****-*****-*****</span>
-                    <button class="copy-btn" onclick="copyToClipboard('ME-CHAMA-NO-DISCORD', this)">COPIAR</button>
-                </div>
-            </div>
-        </div>
+        <p>Tá bem difícil não falar nada pra você e vou aproveitar que tomei essa “coragem” e estou escrevendo. Me perdoa as acentuações e erros de português que vai ter por aqui. Mas peço preste atenção no que eu vou falar. É realmente muito importante!
+</p>
 
-        <div id="fail-screen" class="screen">
-            <h1>😡 QUE COISA FEIA! ERROU!!</h1>
-            <h2>Tente de novo pra liberar o prêmio.</h2>
-            <button class="btn" onclick="location.reload()">JOGAR DE NOVO</button>
+        <p>Faz um ano que a gente se conheceu no Outlast Trials por acaso, queria agradecer até minha amiga por isso. Sendo que estávamos falando que dificilmente tinha mulher no jogo, e que se a gente achasse, era pra adicionar pra jogar com ela. Duas partidas depois, aparece uma pessoa com nome de Yuno, ela me chamou a atenção e disse pra eu ver se ela mulher, fui no seu perfil e parecia que era. Avisei a minha amiga que sim, era uma mulher, eu creio. 
+</p>
+
+        <p>O estranho foi que mesmo você não falando nada, a sua skin (a qual eu gosto muito e sou apaixonado por essa skin por conta disso) era uma que a gente nunca tinha visto antes. A gente falou tão bem da sua personagem e te chamamos de pro-player. Que também era verdade. Não sabíamos nada do mapa e você tava lá fazendo suas peripécias, isso sem falar uma palavra no voip do jogo. Minha amiga até desconfiava que você fosse homem. Final da partida, você com nota A+ e a gente todo quebrado. Você tinha carregado nos dois nas costas sem esforço nenhum, ainda tava fazendo o bug do pulo. O tanto que você me salvava era brincaria. Naquela época eu tinha acabado de baixar o jogo. Acabamos de jogar, você foi embora, eu e minha amiga também aproveitamos e fomos embora. Mas eu tinha aberto seu perfil e tinha ficado lá, na aba da Steam. Eu aproveitei e te adicionei na intenção de você jogar com a minha amiga.
+</p>
+      
+      <p>Não sei o quanto tempo passou, acredito que tinha sido no outro dia que você me aceitou como amizade. Tenho certeza absoluta que você deve ter falado alguma coisa de algum estranho ter te adicionado do nada. Eu faria a mesma coisa. Olhando agora, é bem estranho mesmo. Mas te conhecendo e pensando naquele dia, fica muito mais fácil. Continuando… Não sei muito bem das datas, mas a gente acabou jogando algumas partidas, com você me convidando pra lobby (coisa rara de se ver). Não levou muito tempo e eu tinha cansado do jogo e minha amiga também já não jogava mais. </p>
+
+      <p>O que restava ali era te excluir (eu ia fazer a maior burrada) eu ia te mandar embora porque não te conhecia, odeio conhecer pessoa. Isso era foi no fim de ano, lembro bem!!! (acha que não vou lembrar? deve tá surpresa de tanta coisa que eu lembro, né?) Ficamos um bom tempo sem jogar, até chegar o Natal. Não sei se fui eu ou você que convidou, provavelmente eu, pois você também estava no jogo e queria fechar lobby. Te mandei um feliz natal, você também me deu um feliz natal e tivemos uma pequena conversa ali, você rindo, como sempre. E eu gargalhando também, dois doidos, tirando que nada mudou até hoje. </p>
+
+      <p>Foi nesse dia que você “simpatizou” e pediu o meu Discord. Não vou negar que eu volto pra ver algumas mensagens antigas, pra saber do que a gente conversava e era a gente falando sobre filmes e animes. Continuando… era o momento de amizade ali, tudo muito tranquilo, apenas se conhecendo, sem muita informação porque somos muito pé atrás com isso. Quanto o mínimo souberem da gente, é melhor, da até uma segurança. Muitos papos furados, pouca jogatina, comecei a ficar viciado novamente no jogo e te convidava pra jogar. Nunca fomos uma call, nem nada do tipo. Sempre pelo voip do jogo (Minto. Nem eu nem você falamos na call direito.) Puxávamos bastante brasileiros, sempre que era manito, você conversava com eles. NADA MUDA NÉ, Jaqueline! </p>
+
+      <p>Acho que ouvi sua voz pela primeira vez assim. Não lembro direito quando, mas acredito que tenha sido assim. Ou talvez tenha sido na quebra de braço, a primeira vez você me espancou. Mas depois eu mostrei quem que manda. Ainda estou vendendo essa batalha. Você, senhora conguitos, você não é capaz de me ganhar!!!!!! 
+Mas demos bastante risadas nessa partida do manito. Ficamos sem jogar ou se falar por meses, tudo normal… Até que algum dia eu te chamei pra jogar e você tinha dito que tava com algum problema, eu perguntei o que era e você respondeu que tinham roubado o celular do seu pai. Eu não faço ideia o do porque todo esses inícios de ano, sempre aconteceu alguma coisa com você. Agora em fevereiro você tem essas duas coisas acontecendo, que é a gastrite e a operação da vesícula. </p>
+
+      <p>Voltando ao assunto… eu tentei te apoiar emocionalmente e você lançou uma assim: “Se eu tivesse uma arma, eu mataria eles.” Típico de frase que eu diria facilmente, na real, foi a mesma coisa que eu falei pro meu irmão, quando eu fui assaltado. Literalmente a mesma coisa que você disse. Mas acredito que deu tudo certo, nunca toquei nesses assuntos pessoais, até porque não é coisa minha. Cada um tem sua privacidade. Não adianta você querer ajudar, sendo que a pessoa nem consegue fazer nada. Além do mais que nem tínhamos nenhuma intimidade. </p>
+
+      <p>Depois de um tempo voltamos a conversar. Na verdade você sempre foi assim, de não conversar. Seu ódio por brasileiros é uma coisa sem explicação. Continuando conversando e jogando, fomos se conhecendo melhor, eu pedia a sua playlist porque eu tava sem música e você negava, não sei o porque até hoje kkkkkkkkk
+Acredito que seja a mesma coisa de sempre, que é privacidade. Sempre fui respeitoso com você e soube os limites. Fica muito mais fácil quando duas pessoas compartilham da mesma personalidade. Hora de ter paz é uma coisa sagrada, sem perturbação de ninguém. Somente a gente em um cantinho do quarto e pronto. Não precisa de mais nada! </p>
+
+      <p>Acabei de lembrar dos seus sorvetes ou lanches no qual você comia na call, quase sempre com um hambúrguer, coca cola da tampa preta e batata frita. Dando uma mordida e fazendo aquele som quando a comida tá muito boa (“HMMMM”) sei como é pq ja fiz a mesma coisa.  Vai ter bastante coisa que eu vou lembrar enquanto tiver escrevendo pra você. Achou que eu não prestava atenção em você? Eu lembro dos mínimos detalhes possíveis. Na real é que eu realmente esqueço, mas quando vem as memórias é risada garantida. Quanto também dá primeira vez que eu te mostrei a foto do conguitos e a gente rindo muito. </p>
+
+      <p>Sabe o que é mais engraçado? É que tudo foi sempre espontâneo, nunca teve nada de fingir algo. Eu sempre fui eu, você sempre foi você. Mas muitas das vezes não dá pra falar o que queremos. E não consigo saber o porque essa cidade de Campinas me persegue. Tenho um grupo só com pessoas de Campinas no qual jogamos sempre, pessoas que eu conheci pessoalmente. Pessoas incríveis! Mas o porque você também ser de Campinas, eu não faço a mínima ideia. As coisas realmente só aparecem e são como são. Parece que sempre tem alguma coisa te colocando no lugar certo pra conhecer a pessoa na qual você sempre pensou ou gostaria de ter conhecido que pense igual a você, que você se identifica, que é literalmente você em praticamente tudo!!!</p>
+
+      <p>Sabe quando realmente senti alguma coisa de você? Foi passando tempo junto jogando o famoso Outlast Trials e depois fomos jogar Dead by Daylight. Infelizmente eu não tenho clipes nem nada daquele dia, mas foi um dia muito importante pra mim. Até porque jogamos até as 3 horas da manhã. Nunca achei que a gente iria jogar isso. Esse horário era praticamente impossível e o dia foi incrível! O que a gente dá risada jogando junto é brincadeira. Sempre tem alguma coisa pra dar risada, pode passar até um mosquito que a gente vai rir. Foi nesse mesmo dia que eu ganhei a Lara Croft de você. Tirando as decorações do Discord que eu uso até hoje. A do coração é a minha preferida. </p>
+
+      <p>Não tem nenhuma mentira do que eu esteja falando pra você, nem eu acredito que to fazendo um texto pra uma pessoa que mora a oito horas daqui. No qual é totalmente fora de problema, não vejo problema algum. Mas sabe qual é? Eu nunca ia dizer isso aqui pra você em call ou nada do tipo. Eu nem mesmo ia fazer esse texto, eu só ia deixar sumir tudo. Guardar tudo pra mim e pronto. Como se nada tivesse acontece ou que nunca tivesse sentido nada por você. Que é uma coisa que eu sempre mantive o pé atrás sobre sentimentos. Você nunca sabe o que a pessoa acha sobre você. E é por esse motivo que eu to fazendo isso. Se alguma hora você achou que eu tinha alguma coisa com você, pode ter certeza que sim! </p>
+
+      <p>Fotos de banner no Discord, avatar, aquelas mensagens no perfil do Discord. Bastante delas foi pra você. Só queria manter baixo, sem falar nada, só avisando que eu tava ali, também respeitando sempre seu espaço, tempo, tudo que era possível, por isso muita das vezes eu parecia distante. Também lembrei de quando estávamos jogando Roblox. Aquilo ali foi incrível. Sabia que sua voz é totalmente diferente do microfone do computador pro celular? No celular é muito mais limpa e sua voz fica muito linda!!! Tanto que no dia foi a primeira coisa que eu elogiei. Tirando que a gente sempre perturbava qualquer pessoa que passava no caminho. Sempre estávamos banidos de tirar foto com qualquer pessoa. Tadinhos! Sempre expulso de qualquer selfie possível. </p>
+
+      <p>Presentes, mensagens de que eu sinto sua falta, sempre foi real. Só que precisei de alguns bons meses pra saber se eu sentia alguma coisa por você, pra não te deixar triste e nem me deixar triste. Pessoas acham que se apaixonar, falar que ama ou ter algum sentimento é brincadeira. Paixão pode ir embora a qualquer dia, qualquer momento, em uma semana, 3 dias… Isso é falta de maturidade e responsabilidade. Sempre mostrei que eu tava por você mesmo sem sentir nada disso. Uma pessoa que você sempre pode contar e confiar porque sempre vou tá ali por você. Sempre to por quem eu realmente gosto e amo. Não diria que estou apaixonado, mas que sinto algo além disso que é amor. Sempre quero ver as pessoas de quem eu cuido MUITO BEM! Todo mundo tem problema, eu tenho meus problemas, você tem os seus problemas… problemas antigos, problemas novos, problemas futuros. Sempre vai ter problema, não importa onde for ou o que você tiver.</p>
+
+      <p>Sempre quis saber o que você achava de mim, ou o que passava na sua cabeça sobre minha pessoa. O que eu achava que fosse era realmente real ou eu estava vendo coisas ou sentindo coisas aonde eu não deveria. Até mesmo pra mandar mensagem. Não é que eu não queria te mandar mensagem. Eu sempre quis te mandar mensagem. Mas a gente trabalha, você trabalha muito. E o tempo que você tem de fazer suas coisas acaba sendo reduzido ao extremo. Sobra poucas horas do dia pra você ter o que fazer, tirando que ainda pegam o seu final de semana. Então eu só deixava você em paz, curtindo o máximo possível sem ser perturbada. Você não sabe o quanto eu admiro você e quando fala sobre algum assunto no qual nunca citou antes pra mim. Como por exemplo o box do banheiro que você tá fazendo no seu Apê. Quando que eu ia saber disso? Saber do seu dia também é muito legal, saber das fofocas. </p>
+
+      <p>Também queria entender o porque eu virei administrador no seu servidor, qual foi o realmente motivo pra você ter me dado o cargo. 
+Foi incrível, gostei muito, fiquei surpreso quando eu vi meu nome com o cargo. Mas acho que nunca perguntei sobre isso pra você, creio que não iria receber a resposta exata. </p>
+
+       <p>Realmente fica tudo muito fácil quando é algo real. As palavras fluem com uma facilidade que você nem imagina. Eu só to pensando o que eu gostaria de falar pra você e desabafando tudo aqui. É difícil falar, eu travo. Sou uma pessoa muito tímida, tanto na internet quanto na vida real. Timidez de tremer ou nem sequer querer aparecer pra fazer alguma coisa. Acabei de ter outras lembranças sua. No dia que você tava fazendo teste para o seu novo emprego e eu mandando coisas pra você fixar na cabeça. No dia que você ficou no quarto esperando as visitas irem embora e você tava morrendo de fome e não queria ir de jeito nenhum. No dia da sua autoescola quando disse que era muito difícil aprender a troca de marcha, te mandei vídeos, te dei alguns toques do que fazer, não deve ter surgido efeito… Mas o importante foi que na outra semana você estava finalmente habilitada! Fiquei muito feliz por você!!!! Tanto que a comemoração foi a gente ter jogado mais Outlast Trials. </p>
+
+       <p>Nos presentes que você enviou no ano novo de 2025, quando você mandou a mensagem escrita: “Te adoro”, foi a primeira vez que a gente chegou perto de falar “Te Amo”. Tirando o dia do Roblox que a gente subia montanha, tinha um jogo que era uma escola, alguma coisa assim… E tinha uma criança e veio uma criança perguntar se você era minha namorada. Eu fingi que não escutei, porque eu tava com vergonha. Você tinha me chamado e falou que a criança queria falar comigo. Eu realmente queria ter dito pra criança que um dia ela seria. Se esse dia vai chegar ou não, não faço ideia. Mas a gente sabe que tudo se inicia de alguma forma. Só precisa ser paciente e fazer acontecer. </p>
+
+       <p>Achava que eu fosse romântico assim ou algo do tipo? Acho que ninguém mais gosta de breguice, de texto e outras coisas bobas. Se eu fiz alguma coisa pra você na qual te deixou triste, não foi minha intenção de forma alguma. Sempre pensei muito, muito mesmo antes de fazer qualquer coisa ou falar. Então eu creio que não fiz nada que te deixou magoada. Saiba que meu sorriso foi de ponta a ponta quando eu finalmente falei que te amava. E tudo que eu falei no áudio, é real. Não retiro uma palavra do que disse sobre você. Ainda faltou muitas coisas para serem mencionadas. Aliás, sinto falta de você pegando o Phoenix que adora me cegar no Valorant. Aproveita e taca a flash em mim, me queima, me mata. Porque não sei onde vou enfiar minha cara depois que você ler. Inclusive, obrigado por me defender dos espanhóis, você xingou eles por mim, eu não fazia ideia do que estavam falando, você adicionou eles e deve ter xingado tanto… Tirando que a gente nunca terminou a série do doidinho da planta que fica matando as pessoa e muito menos viu nenhum outro episódio de Horror Stories (acho que é assim). Eu posso ficar dias aqui escrevendo infinitamente cada coisa sobre você e o quão carinhosa você é.</p>
+
+       <p>Sempre quando a gente faz alguma coisa em chamada, quando eu to quieto, eu só não tenho muita coisa pra falar, mas pode ter certeza absoluta que eu to aproveitando o máximo e feliz de tá ali também. Qualquer momento com você. Quando você também tá em chamada com seus amigos, eu não consigo entrar, é seu momento de distração, tirar tudo o que tá te deixando triste. E quando você não tá on-line no Discord, eu vou ficar preocupado achando que alguma coisa aconteceu com você. Já aconteceu e a maioria das vezes não mandei mensagem. Mas eu estava preocupado e pedindo que tivesse tudo bem, as vezes era cansaço do trabalho, o importante era que você sempre voltava pros seus jogos no dia seguinte.
+Só não mente pra mim. Eu sei que é difícil falar, eu já to me tremendo, já até chorei várias vezes escrevendo isso aqui. Mas várias vezes quando você falava que tava bem, eu insistia e você contava o que era. Se eu to aqui pra você, se você tá triste, mas o motivo é algo que você não quer falar. Só me fala que tá triste. Eu aceito do jeito que você é, já tentei te animar muitas vezes, fazer alguma coisa com você quando tá desanimada. 
+</p>
+
+       <p>Se lembra quando disse que esse ano seria incrível pra nós dois? Ainda não acabou e tem muito tempo de sobra. Quero a melhor versão de você. Nem que seja 1% superior do que foi ano passado. Relaxa que eu sempre tô aqui e você sabe muito bem. Ser diferente não é ser bom nem ruim, é ser você. E eu agradeço por cada coisa que você me proporcionou e ainda vai continuar fazendo isso. Só mostra quem realmente você é, para pessoas que merecem.</p>
+
+      <p>Além de ser muito bonita, você é uma pessoa maravilhosa. Quem te conhece sabe bem disso.
+</p>
+      
+        <div class="final">
+            Eu te amo! 🤍 <br>
+            (coração branco que você adora usar)
         </div>
 
     </div>
 
-    <div id="timeout-screen">
-        <h1>⏰ SEU TEMPO ACABOU!</h1>
-        <div style="width: 300px;">
-            <button class="btn" onclick="location.reload()">JOGAR DE NOVO</button>
-        </div>
-    </div>
+</div>
 
-    <script>
-        // --- FUNÇÃO DE COPIAR (NOVA) ---
-        function copyToClipboard(text, btnElement) {
-            navigator.clipboard.writeText(text).then(() => {
-                const originalText = btnElement.innerText;
-                
-                // Muda o visual do botão
-                btnElement.innerText = "COPIADO!";
-                btnElement.style.backgroundColor = "#2ed573"; // Verde
-                btnElement.style.color = "white";
-                
-                // Volta ao normal depois de 2 segundos
-                setTimeout(() => {
-                    btnElement.innerText = originalText;
-                    btnElement.style.backgroundColor = "white";
-                    btnElement.style.color = "black";
-                }, 2000);
-            }).catch(err => {
-                console.error('Erro ao copiar: ', err);
-                alert("Erro ao copiar. Tente selecionar manualmente.");
-            });
-        }
-
-        // --- EDITE AS PERGUNTAS AQUI ---
-        const questions = [
-            {
-                question: "Qual desses jogos eu tenho mais horas jogadas?",
-                answers: [
-                    { text: "Counter-Strike", correct: false },
-                    { text: "Lineage", correct: false },
-                    { text: "Minecraft", correct: true },
-                    { text: "Grand Chase", correct: false }
-                ]
-            },
-            {
-                question: "Qual minha cor favorita?",
-                answers: [
-                    { text: "Azul", correct: false },
-                    { text: "Preto", correct: true },
-                    { text: "Roxo", correct: false },
-                    { text: "Verde", correct: false }
-                ]
-            },
-            {
-                question: "O que faria caso eu ganhasse na loteria?",
-                answers: [
-                    { text: "Gravar vídeo falando bom dia pobres.", correct: true },
-                    { text: "Uma casa na praia", correct: false },
-                    { text: "Um carro de luxo", correct: false },
-                    { text: "Viajaria o mundo", correct: false }
-                ]
-            },
-            {
-                question: "Qual é a data do meu aniversário?",
-                answers: [
-                    { text: "13 de Julho", correct: false },
-                    { text: "03 de Junho", correct: true },
-                    { text: "03 de Agosto", correct: false },
-                    { text: "06 de Maio", correct: false }
-                ]
-            },
-            {
-                question: "Qual foi o primeiro presente que você me deu?",
-                answers: [
-                    { text: "Decoração no Discord", correct: true },
-                    { text: "DLC no Outlast Trials", correct: false },
-                    { text: "Skin no DBD", correct: false },
-                    { text: "Skin no Fortnite", correct: false }
-                ]
-            },
-            {
-                question: "Qual país falou que iria fugir? (Imigrar)",
-                answers: [
-                    { text: "Espanha", correct: false },
-                    { text: "Canadá", correct: false },
-                    { text: "Chile", correct: false },
-                    { text: "Estados Unidos", correct: true }
-                ]
-            },
-            {
-                question: "Qual desses filmes que você me indicou eu achei o mais esquisito?",
-                answers: [
-                    { text: "Uma noite de Crime", correct: false },
-                    { text: "A Substância", correct: true },
-                    { text: "O Poço", correct: false },
-                    { text: "Pânico", correct: false }
-                ]
-            },
-            {
-                question: "Qual dessas séries que te indiquei, você assistiu?",
-                answers: [
-                    { text: "Bem-Vindos a Derry", correct: false },
-                    { text: "Fallout", correct: false },
-                    { text: "Nunca assistiu nada!", correct: true },
-                    { text: "Reacher", correct: false }
-                ]
-            },
-            {
-                question: "Somos uma dupla de?",
-                answers: [
-                    { text: "Funk", correct: true },
-                    { text: "Sertanejo", correct: false },
-                    { text: "MPB", correct: false },
-                    { text: "Pagode", correct: false }
-                ]
-            },
-            {
-                question: "Vai comprar um carro pra mim quando estiver rica?",
-                answers: [
-                    { text: "Sim", correct: false },
-                    { text: "Vou pensar...", correct: true },
-                    { text: "Não", correct: false }
-                ]
-            },
-            {
-                question: "A Jaqueline é?",
-                answers: [
-                    { text: "Maravilhosa!", correct: true },
-                    { text: "Incrível!", correct: true },
-                    { text: "Linda!", correct: true },
-                    { text: "Espetacular!", correct: true }
-                ]
-            }
-        ];
-
-        // --- CONFIGURAÇÃO DE ÁUDIO ---
-        const errorSound = new Audio('aiaiai.mp3');
-        errorSound.volume = 0.5;
-
-        const bgMusic = new Audio('tiru.mp3');
-        bgMusic.volume = 0.1;
-        bgMusic.loop = true;
-
-        const winMusic = new Audio('skillet.mp3');
-        winMusic.volume = 0.2;
-
-        // --- LÓGICA DO JOGO ---
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let timer;
-        const TIME_LIMIT = 30;
-        let timeRemaining = TIME_LIMIT;
-
-        function startGame() {
-            bgMusic.play().catch(e => console.log("Navegador bloqueou autoplay, clique necessário"));
-            document.getElementById('start-screen').classList.remove('active');
-            document.getElementById('quiz-screen').classList.add('active');
-            document.getElementById('game-timer').style.display = 'block';
-            createProgressBar();
-            showQuestion();
-        }
-
-        function startTimer() {
-            timeRemaining = TIME_LIMIT;
-            updateTimerDisplay();
-            clearInterval(timer);
-            timer = setInterval(() => {
-                timeRemaining--;
-                updateTimerDisplay();
-                if (timeRemaining <= 0) {
-                    clearInterval(timer);
-                    showTimeoutScreen();
-                }
-            }, 1000);
-        }
-
-        function updateTimerDisplay() {
-            const formattedTime = timeRemaining < 10 ? `00:0${timeRemaining}` : `00:${timeRemaining}`;
-            document.getElementById('game-timer').innerText = formattedTime;
-            if(timeRemaining <= 5) {
-                document.getElementById('game-timer').style.color = '#ff3f34';
-            } else {
-                document.getElementById('game-timer').style.color = 'white';
-            }
-        }
-
-        function showTimeoutScreen() {
-            bgMusic.pause();
-            errorSound.play();
-            document.getElementById('quiz-screen').classList.remove('active');
-            document.getElementById('game-timer').style.display = 'none';
-            document.getElementById('timeout-screen').style.display = 'flex'; 
-        }
-
-        function createProgressBar() {
-            const container = document.getElementById('steps-container');
-            container.innerHTML = '';
-            questions.forEach((_, index) => {
-                const step = document.createElement('div');
-                step.classList.add('step-circle');
-                step.innerText = index + 1;
-                step.id = `step-${index}`;
-                container.appendChild(step);
-            });
-        }
-
-        function updateProgressBar() {
-            questions.forEach((_, index) => {
-                const step = document.getElementById(`step-${index}`);
-                step.classList.remove('active');
-                if (index === currentQuestionIndex) {
-                    step.classList.add('active');
-                }
-            });
-        }
-
-        function showQuestion() {
-            resetState();
-            startTimer();
-            updateProgressBar();
-            let currentQuestion = questions[currentQuestionIndex];
-            document.getElementById('question-text').innerText = currentQuestion.question;
-            currentQuestion.answers.forEach(answer => {
-                const button = document.createElement('button');
-                button.innerText = answer.text;
-                button.classList.add('btn');
-                if (answer.correct) {
-                    button.dataset.correct = answer.correct;
-                }
-                button.addEventListener('click', selectAnswer);
-                document.getElementById('answer-buttons').appendChild(button);
-            });
-        }
-
-        function resetState() {
-            const answerButtons = document.getElementById('answer-buttons');
-            while (answerButtons.firstChild) {
-                answerButtons.removeChild(answerButtons.firstChild);
-            }
-        }
-
-        function selectAnswer(e) {
-            clearInterval(timer);
-            const selectedBtn = e.target;
-            const isCorrect = selectedBtn.dataset.correct === "true";
-            if (isCorrect) {
-                selectedBtn.classList.add('correct');
-                score++;
-            } else {
-                errorSound.play();
-                selectedBtn.classList.add('wrong');
-            }
-            Array.from(document.getElementById('answer-buttons').children).forEach(button => {
-                button.disabled = true;
-                if (button.dataset.correct === "true") {
-                    button.classList.add('correct');
-                }
-            });
-            setTimeout(() => {
-                currentQuestionIndex++;
-                if (currentQuestionIndex < questions.length) {
-                    showQuestion();
-                } else {
-                    showResult();
-                }
-            }, 1500);
-        }
-
-        function showResult() {
-            document.getElementById('quiz-screen').classList.remove('active');
-            document.getElementById('game-timer').style.display = 'none';
-            bgMusic.pause();
-            if (score === questions.length) { 
-                document.getElementById('result-screen').classList.add('active');
-                winMusic.play();
-                launchFireworks();
-            } else {
-                document.getElementById('fail-screen').classList.add('active');
-            }
-        }
-
-        function launchFireworks() {
-            var duration = 5 * 1000;
-            var animationEnd = Date.now() + duration;
-            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-            var interval = setInterval(function() {
-                var timeLeft = animationEnd - Date.now();
-                if (timeLeft <= 0) {
-                    return clearInterval(interval);
-                }
-                var particleCount = 50 * (timeLeft / duration);
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random() - 0.2, y: Math.random() - 0.2 } }));
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random() + 0.2, y: Math.random() - 0.2 } }));
-            }, 250);
-        }
-    </script>
 </body>
 </html>
